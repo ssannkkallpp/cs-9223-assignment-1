@@ -4,7 +4,7 @@ import base64
 import os
 import warnings
 
-# Suppress urllib3 SSL warning for LibreSSL compatibility
+# Suppress urllib3 SSL warning for LibreSSL compatibility since I am running on mac
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
 
 from sigstore.sign import RekorClient
@@ -135,7 +135,6 @@ def get_latest_checkpoint(debug=False):
     try:
         # Create Rekor client for session management
         rekor_client = RekorClient("https://rekor.sigstore.dev/")
-        print(f"Reklot client url: {rekor_client.url}")
         
         # Make direct HTTP request to get complete checkpoint data (including inactive shards)
         response = rekor_client.session.get(f"{rekor_client.url}log")
@@ -258,7 +257,7 @@ def consistency(prev_checkpoint, debug=False):
             
             if debug:
                 print("Consistency verification successful!")
-            print("Consistency verification successful: merkle proof verified.")
+            print("Consistency verification successful.")
             return True
             
         except Exception as e:
