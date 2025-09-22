@@ -14,7 +14,7 @@ from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, co
 def get_log_entry(log_index, debug=False):
     """
     Retrieve a log entry from the Rekor transparency log by index using sigstore-python.
-    
+
     Args:
         log_index (int): The index of the log entry to retrieve
         debug (bool): Enable debug output
@@ -49,10 +49,12 @@ def get_log_entry(log_index, debug=False):
 
 def get_verification_proof(log_index, debug=False):
     # verify that log index value is sane
+    # This function is not used, hence I have chosen to not implement it
     pass
 
 def inclusion(log_index, artifact_filepath, debug=False):
     # verify that log index and artifact filepath values are sane
+    # Implemented by cursor AI based on my instructions for input checking.
     if not isinstance(log_index, int) or log_index < 0:
         raise ValueError(f"log_index must be a non-negative integer, got: {log_index}")
     
@@ -86,8 +88,12 @@ def inclusion(log_index, artifact_filepath, debug=False):
     extracted_public_key = extract_public_key(certificate_bytes)
     
     # Verify artifact signature
-    result = verify_artifact_signature(signature_bytes, extracted_public_key, artifact_filepath)
-    
+    signature_verification = verify_artifact_signature(signature_bytes, extracted_public_key, artifact_filepath)
+    if not signature_verification:
+        if debug:
+            print("Signature verification failed")
+        return False
+
     # Extract verification data for inclusion proof
     inclusion_proof = log_entry.inclusion_proof
     if inclusion_proof:
@@ -115,6 +121,7 @@ def inclusion(log_index, artifact_filepath, debug=False):
 def get_latest_checkpoint(debug=False):
     """
     Get the latest checkpoint from the Rekor transparency log.
+    Generated with the Cursor AI based on my precise instructions and the /log endpoint
     
     Args:
         debug (bool): Enable debug output
@@ -128,6 +135,7 @@ def get_latest_checkpoint(debug=False):
     try:
         # Create Rekor client for session management
         rekor_client = RekorClient("https://rekor.sigstore.dev/")
+        print(f"Reklot client url: {rekor_client.url}")
         
         # Make direct HTTP request to get complete checkpoint data (including inactive shards)
         response = rekor_client.session.get(f"{rekor_client.url}log")
@@ -162,6 +170,8 @@ def get_latest_checkpoint(debug=False):
 def consistency(prev_checkpoint, debug=False):
     """
     Verify consistency between a previous checkpoint and the latest checkpoint.
+    Generated with cursor AI upon my instruction to do input validation
+    Then check prev_checkpoint (input) details against latest checkpoint which is fetched with helper method
     
     Args:
         prev_checkpoint (dict): Previous checkpoint with treeID, treeSize, rootHash
@@ -248,11 +258,13 @@ def consistency(prev_checkpoint, debug=False):
             
             if debug:
                 print("Consistency verification successful!")
+            print("Consistency verification successful: merkle proof verified.")
             return True
             
         except Exception as e:
             if debug:
                 print(f"Consistency verification failed: {e}")
+            print(f"Consistency verification failed: {e}")
             return False
             
     except Exception as e:
