@@ -68,10 +68,7 @@ def inclusion(log_index, artifact_filepath, debug=False):
     if debug:
         print(f"Validated inputs - log_index: {log_index}, artifact_filepath: {artifact_filepath}")
     
-    # extract_public_key(certificate)
-    # verify_artifact_signature(signature, public_key, artifact_filepath)
-    # get_verification_proof(log_index)
-    # verify_inclusion(DefaultHasher, index, tree_size, leaf_hash, hashes, root_hash)
+
     log_entry = get_log_entry(log_index, debug)
     leaf_hash = compute_leaf_hash(log_entry.body)
     body = base64.b64decode(log_entry.body)
@@ -215,7 +212,8 @@ def consistency(prev_checkpoint, debug=False):
         proof_endpoint = "log/proof"
         params = {
             'firstSize': prev_size,
-            'lastSize': latest_size
+            'lastSize': latest_size,
+            'treeID': prev_checkpoint['treeID']
         }
         
         if debug:
