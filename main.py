@@ -86,7 +86,6 @@ def inclusion(log_index, artifact_filepath, debug=False):
     
     # Extract public key from certificate
     extracted_public_key = extract_public_key(certificate_bytes)
-    print("Body json: ", body_json)
     # Verify artifact signature
     signature_verification = verify_artifact_signature(signature_bytes, extracted_public_key, artifact_filepath)
     if not signature_verification:
