@@ -10,5 +10,9 @@ The Python Rekor Monitor template code is cloned from the following existing rep
 ## Contents
 
 - `artifact.md` - Artifact documentation
-- `cosign.bundle` - Cosign signature bundle
-- `python-rekor-monitor-template/` - Python Rekor Monitor template code (cloned from the source repository above)
+- `python-rekor-monitor-template/` - Provides the main.py, util.py and merke_proof.py files.
+
+## Usage
+
+- pip3 install -r requirements.txt
+- python3 main.py --help
