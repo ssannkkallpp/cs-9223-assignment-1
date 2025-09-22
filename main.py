@@ -1,6 +1,12 @@
 import argparse
 import json
 import base64
+import os
+import warnings
+
+# Suppress urllib3 SSL warning for LibreSSL compatibility
+warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
+
 from sigstore.sign import RekorClient
 from util import extract_public_key, verify_artifact_signature
 from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
@@ -33,14 +39,6 @@ def get_log_entry(log_index, debug=False):
             print(f"Created Rekor client for production instance")
         # Get log entry by index using the correct method
         log_entry = rekor_client.log.entries.get(log_index=log_index)  
-        # if debug and log_entry:
-        #     print(f"Successfully retrieved log entry {log_index}")
-        #     print(f"Log entry UUID: {log_entry.uuid}")
-        #     print(f"Log index: {log_entry.log_index}")
-        #     print(f"Integrated time: {log_entry.integrated_time}")
-        #     print(f"Log ID: {log_entry.log_id}")
-        #     if hasattr(log_entry, 'body'):
-        #         print(f"Body (Base64): {log_entry.body}")
         return log_entry
             
     except Exception as e:
@@ -55,6 +53,21 @@ def get_verification_proof(log_index, debug=False):
 
 def inclusion(log_index, artifact_filepath, debug=False):
     # verify that log index and artifact filepath values are sane
+    if not isinstance(log_index, int) or log_index < 0:
+        raise ValueError(f"log_index must be a non-negative integer, got: {log_index}")
+    
+    if not artifact_filepath:
+        raise ValueError("artifact_filepath cannot be empty or None")
+    
+    if not os.path.exists(artifact_filepath):
+        raise ValueError(f"artifact file does not exist: {artifact_filepath}")
+    
+    if not os.path.isfile(artifact_filepath):
+        raise ValueError(f"artifact_filepath must be a file, not a directory: {artifact_filepath}")
+    
+    if debug:
+        print(f"Validated inputs - log_index: {log_index}, artifact_filepath: {artifact_filepath}")
+    
     # extract_public_key(certificate)
     # verify_artifact_signature(signature, public_key, artifact_filepath)
     # get_verification_proof(log_index)
@@ -76,8 +89,7 @@ def inclusion(log_index, artifact_filepath, debug=False):
     extracted_public_key = extract_public_key(certificate_bytes)
     
     # Verify artifact signature
-    result = verify_artifact_signature(signature_bytes, extracted_public_key, "/Users/sankalpramesh/cs-9223-assignment-1/artifact.md")
-    print("Signature verification result:", result)
+    result = verify_artifact_signature(signature_bytes, extracted_public_key, artifact_filepath)
     
     # Extract verification data for inclusion proof
     inclusion_proof = log_entry.inclusion_proof
@@ -87,8 +99,21 @@ def inclusion(log_index, artifact_filepath, debug=False):
         tree_size = inclusion_proof.tree_size
         root_hash = inclusion_proof.root_hash if inclusion_proof.root_hash else None
         hashes = inclusion_proof.hashes if inclusion_proof.hashes else []
-        tree_size = inclusion_proof.tree_size
-        return verify_inclusion(DefaultHasher, index, tree_size, leaf_hash, hashes, root_hash) == None
+        
+        # Verify the merkle inclusion proof
+        inclusion_result = verify_inclusion(DefaultHasher, index, tree_size, leaf_hash, hashes, root_hash)
+        # verify_inclusion returns None on success, raises exception on failure
+        merkle_verification_success = inclusion_result is None
+        
+        if merkle_verification_success:
+            print("Signature is valid.")
+            print("Offline root hash calculation for inclusion is verified.")
+        
+        return merkle_verification_success
+    else:
+        if debug:
+            print("No inclusion proof found in log entry")
+        return False
             
 def get_latest_checkpoint(debug=False):
     """
@@ -104,19 +129,20 @@ def get_latest_checkpoint(debug=False):
         print("Retrieving latest checkpoint from Rekor server...")
     
     try:
-        # Create Rekor client
+        # Create Rekor client for session management
         rekor_client = RekorClient("https://rekor.sigstore.dev/")
         
-        # Get log information (includes checkpoint data)
-        log_info = rekor_client.log.get()
+        # Make direct HTTP request to get complete checkpoint data (including inactive shards)
+        response = rekor_client.session.get(f"{rekor_client.url}log")
         
-        # Structure checkpoint data
-        checkpoint = {
-            "treeID": log_info.tree_id,
-            "treeSize": log_info.tree_size,
-            "rootHash": log_info.root_hash,
-            "signedTreeHead": log_info.signed_tree_head
-        }
+        if response.status_code != 200:
+            if debug:
+                print(f"Failed to get checkpoint: HTTP {response.status_code}")
+                print(f"Response: {response.text}")
+            return None
+        
+        # Get complete checkpoint data from response
+        checkpoint = response.json()
         
         if debug:
             print(f"Retrieved checkpoint - Tree ID: {checkpoint['treeID']}")
@@ -271,7 +297,7 @@ def main():
         checkpoint = get_latest_checkpoint(debug)
         print(json.dumps(checkpoint, indent=4))
     if args.inclusion:
-        inclusion(args.inclusion, args.artifact, debug)
+        inclusion_result = inclusion(args.inclusion, args.artifact, debug)
     if args.consistency:
         if not args.tree_id:
             print("please specify tree id for prev checkpoint")

@@ -1,0 +1,6 @@
+# Core dependencies for Rekor transparency log verification
+sigstore==3.6.5
+cryptography>=41.0.0
+
+# HTTP client dependencies
+requests>=2.28.0
