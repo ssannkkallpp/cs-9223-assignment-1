@@ -86,7 +86,7 @@ def inclusion(log_index, artifact_filepath, debug=False):
     
     # Extract public key from certificate
     extracted_public_key = extract_public_key(certificate_bytes)
-    
+    print("Body json: ", body_json)
     # Verify artifact signature
     signature_verification = verify_artifact_signature(signature_bytes, extracted_public_key, artifact_filepath)
     if not signature_verification:
@@ -199,22 +199,6 @@ def consistency(prev_checkpoint, debug=False):
         # Check if tree has grown
         prev_size = prev_checkpoint['treeSize']
         latest_size = latest_checkpoint['treeSize']
-        
-        if prev_size > latest_size:
-            if debug:
-                print(f"Invalid: previous size ({prev_size}) > latest size ({latest_size})")
-            return False
-        
-        if prev_size == latest_size:
-            # Same size, should have same root hash
-            if prev_checkpoint['rootHash'] == latest_checkpoint['rootHash']:
-                if debug:
-                    print("Consistency verified: identical tree states")
-                return True
-            else:
-                if debug:
-                    print("Inconsistency detected: same size but different root hashes")
-                return False
         
         # Get consistency proof using sigstore client
         rekor_client = RekorClient("https://rekor.sigstore.dev/")
