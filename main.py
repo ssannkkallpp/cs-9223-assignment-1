@@ -14,6 +14,7 @@ from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, co
 def get_log_entry(log_index, debug=False):
     """
     Retrieve a log entry from the Rekor transparency log by index using sigstore-python.
+    Added error handling with the help of cursor AI.
 
     Args:
         log_index (int): The index of the log entry to retrieve
@@ -54,7 +55,7 @@ def get_verification_proof(log_index, debug=False):
 
 def inclusion(log_index, artifact_filepath, debug=False):
     # verify that log index and artifact filepath values are sane
-    # Implemented by cursor AI based on my instructions for input checking.
+    # Implemented with help from cursor AI based on my instructions for input validation.
     if not isinstance(log_index, int) or log_index < 0:
         raise ValueError(f"log_index must be a non-negative integer, got: {log_index}")
     
@@ -120,7 +121,7 @@ def inclusion(log_index, artifact_filepath, debug=False):
 def get_latest_checkpoint(debug=False):
     """
     Get the latest checkpoint from the Rekor transparency log.
-    Generated with the Cursor AI based on my precise instructions and the /log endpoint
+    Generated with the help of Cursor AI based on my precise instructions and the /log endpoint
     
     Args:
         debug (bool): Enable debug output
