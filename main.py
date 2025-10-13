@@ -3,6 +3,7 @@ import json
 import base64
 import os
 import warnings
+from urllib.parse import urljoin
 
 # Suppress urllib3 SSL warning for LibreSSL compatibility since I am running on mac
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
@@ -137,13 +138,9 @@ def get_latest_checkpoint(debug=False):
         rekor_client = RekorClient("https://rekor.sigstore.dev/")
         
         # Make direct HTTP request to get complete checkpoint data (including inactive shards)
-        response = rekor_client.session.get(f"{rekor_client.url}log")
-        
-        if response.status_code != 200:
-            if debug:
-                print(f"Failed to get checkpoint: HTTP {response.status_code}")
-                print(f"Response: {response.text}")
-            return None
+        endpoint = urljoin(rekor_client.url, "log")
+        response = rekor_client.session.get(endpoint)
+        response.raise_for_status()
         
         # Get complete checkpoint data from response
         checkpoint = response.json()
@@ -164,7 +161,7 @@ def get_latest_checkpoint(debug=False):
     except Exception as e:
         if debug:
             print(f"Error retrieving checkpoint: {e}")
-        return None
+        raise
 
 def consistency(prev_checkpoint, debug=False):
     """
@@ -212,13 +209,9 @@ def consistency(prev_checkpoint, debug=False):
         if debug:
             print(f"Requesting consistency proof using sigstore client with params: {params}")
         
-        response = rekor_client.session.get(f"{rekor_client.url}{proof_endpoint}", params=params)
-        
-        if response.status_code != 200:
-            if debug:
-                print(f"Failed to get consistency proof: HTTP {response.status_code}")
-                print(f"Response: {response.text}")
-            return False
+        endpoint = urljoin(rekor_client.url, proof_endpoint)
+        response = rekor_client.session.get(endpoint, params=params)
+        response.raise_for_status()
         
         proof_data = response.json()
         
