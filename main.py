@@ -12,6 +12,10 @@ from sigstore.sign import RekorClient
 from util import extract_public_key, verify_artifact_signature
 from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
 
+# Global Rekor base URL and single client instance
+BASE_URL = "https://rekor.sigstore.dev/"
+REKOR_CLIENT = RekorClient(BASE_URL)
+
 def get_log_entry(log_index, debug=False):
     """
     Retrieve a log entry from the Rekor transparency log by index using sigstore-python.
@@ -35,12 +39,11 @@ def get_log_entry(log_index, debug=False):
         print(f"Retrieving log entry at index: {log_index}")
     
     try:
-        # Create Rekor client using sigstore-python
-        rekor_client = RekorClient("https://rekor.sigstore.dev/")
+        # Use global Rekor client
         if debug:
-            print(f"Created Rekor client for production instance")
+            print("Using Rekor client for production instance")
         # Get log entry by index using the correct method
-        log_entry = rekor_client.log.entries.get(log_index=log_index)  
+        log_entry = REKOR_CLIENT.log.entries.get(log_index=log_index)
         return log_entry
             
     except Exception as e:
@@ -134,12 +137,9 @@ def get_latest_checkpoint(debug=False):
         print("Retrieving latest checkpoint from Rekor server...")
     
     try:
-        # Create Rekor client for session management
-        rekor_client = RekorClient("https://rekor.sigstore.dev/")
-        
         # Make direct HTTP request to get complete checkpoint data (including inactive shards)
-        endpoint = urljoin(rekor_client.url, "log")
-        response = rekor_client.session.get(endpoint)
+        endpoint = urljoin(REKOR_CLIENT.url, "log")
+        response = REKOR_CLIENT.session.get(endpoint)
         response.raise_for_status()
         
         # Get complete checkpoint data from response
@@ -198,7 +198,6 @@ def consistency(prev_checkpoint, debug=False):
         latest_size = latest_checkpoint['treeSize']
         
         # Get consistency proof using sigstore client
-        rekor_client = RekorClient("https://rekor.sigstore.dev/")
         proof_endpoint = "log/proof"
         params = {
             'firstSize': prev_size,
@@ -209,8 +208,8 @@ def consistency(prev_checkpoint, debug=False):
         if debug:
             print(f"Requesting consistency proof using sigstore client with params: {params}")
         
-        endpoint = urljoin(rekor_client.url, proof_endpoint)
-        response = rekor_client.session.get(endpoint, params=params)
+        endpoint = urljoin(REKOR_CLIENT.url, proof_endpoint)
+        response = REKOR_CLIENT.session.get(endpoint, params=params)
         response.raise_for_status()
         
         proof_data = response.json()
