@@ -241,13 +241,13 @@ def consistency(prev_checkpoint, debug=False):
             
             if debug:
                 print("Consistency verification successful!")
-            print("Consistency verification successful.")
+
             return True
             
         except Exception as e:
             if debug:
                 print(f"Consistency verification failed: {e}")
-            print(f"Consistency verification failed: {e}")
+
             return False
             
     except Exception as e:
