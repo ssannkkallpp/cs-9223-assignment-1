@@ -82,8 +82,14 @@ def inclusion(log_index, artifact_filepath, debug=False):
     body_json = json.loads(body)
     
     # Extract signature and certificate content
-    signature_content = body_json["spec"]["signature"]["content"]
-    certificate_content = body_json["spec"]["signature"]["publicKey"]["content"]
+    signature_content = body_json.get("spec", {}).get("signature", {}).get("content")
+    certificate_content = body_json.get("spec", {}).get("signature", {}).get("publicKey", {}).get("content")
+    
+    if signature_content is None or certificate_content is None: 
+        if debug:
+            print("Signature verification failed")
+        
+        return False
     
     # Decode the Base64-encoded signature and certificate
     signature_bytes = base64.b64decode(signature_content)
