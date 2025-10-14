@@ -4,6 +4,7 @@ import base64
 import os
 import warnings
 from urllib.parse import urljoin
+import requests
 
 # Suppress urllib3 SSL warning for LibreSSL compatibility since I am running on mac
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
@@ -46,10 +47,9 @@ def get_log_entry(log_index, debug=False):
         log_entry = REKOR_CLIENT.log.entries.get(log_index=log_index)
         return log_entry
             
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         if debug:
-            print(f"Error occurred while fetching log entry {log_index}: {e}")
-            print(f"Error type: {type(e).__name__}")
+            print(f"Error occured while fetching log entry {log_index}: {e}")
         return None
 
 def get_verification_proof(log_index, debug=False):
@@ -164,9 +164,9 @@ def get_latest_checkpoint(debug=False):
         
         return checkpoint
         
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         if debug:
-            print(f"Error retrieving checkpoint: {e}")
+            print(f"Network error retrieving checkpoint: {e}")
         raise
 
 def consistency(prev_checkpoint, debug=False):
