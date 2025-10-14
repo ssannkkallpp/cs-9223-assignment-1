@@ -3,6 +3,8 @@ import json
 import base64
 import os
 import warnings
+from urllib.parse import urljoin
+import requests
 
 # Suppress urllib3 SSL warning for LibreSSL compatibility since I am running on mac
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
@@ -10,6 +12,10 @@ warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.
 from sigstore.sign import RekorClient
 from util import extract_public_key, verify_artifact_signature
 from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
+
+# Global Rekor base URL and single client instance
+BASE_URL = "https://rekor.sigstore.dev/"
+REKOR_CLIENT = RekorClient(BASE_URL)
 
 def get_log_entry(log_index, debug=False):
     """
@@ -34,18 +40,16 @@ def get_log_entry(log_index, debug=False):
         print(f"Retrieving log entry at index: {log_index}")
     
     try:
-        # Create Rekor client using sigstore-python
-        rekor_client = RekorClient("https://rekor.sigstore.dev/")
+        # Use global Rekor client
         if debug:
-            print(f"Created Rekor client for production instance")
+            print("Using Rekor client for production instance")
         # Get log entry by index using the correct method
-        log_entry = rekor_client.log.entries.get(log_index=log_index)  
+        log_entry = REKOR_CLIENT.log.entries.get(log_index=log_index)
         return log_entry
             
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         if debug:
-            print(f"Error occurred while fetching log entry {log_index}: {e}")
-            print(f"Error type: {type(e).__name__}")
+            print(f"Error occured while fetching log entry {log_index}: {e}")
         return None
 
 def get_verification_proof(log_index, debug=False):
@@ -78,8 +82,14 @@ def inclusion(log_index, artifact_filepath, debug=False):
     body_json = json.loads(body)
     
     # Extract signature and certificate content
-    signature_content = body_json["spec"]["signature"]["content"]
-    certificate_content = body_json["spec"]["signature"]["publicKey"]["content"]
+    signature_content = body_json.get("spec", {}).get("signature", {}).get("content")
+    certificate_content = body_json.get("spec", {}).get("signature", {}).get("publicKey", {}).get("content")
+    
+    if signature_content is None or certificate_content is None: 
+        if debug:
+            print("Signature verification failed")
+        
+        return False
     
     # Decode the Base64-encoded signature and certificate
     signature_bytes = base64.b64decode(signature_content)
@@ -133,17 +143,10 @@ def get_latest_checkpoint(debug=False):
         print("Retrieving latest checkpoint from Rekor server...")
     
     try:
-        # Create Rekor client for session management
-        rekor_client = RekorClient("https://rekor.sigstore.dev/")
-        
         # Make direct HTTP request to get complete checkpoint data (including inactive shards)
-        response = rekor_client.session.get(f"{rekor_client.url}log")
-        
-        if response.status_code != 200:
-            if debug:
-                print(f"Failed to get checkpoint: HTTP {response.status_code}")
-                print(f"Response: {response.text}")
-            return None
+        endpoint = urljoin(REKOR_CLIENT.url, "log")
+        response = REKOR_CLIENT.session.get(endpoint)
+        response.raise_for_status()
         
         # Get complete checkpoint data from response
         checkpoint = response.json()
@@ -161,10 +164,10 @@ def get_latest_checkpoint(debug=False):
         
         return checkpoint
         
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         if debug:
-            print(f"Error retrieving checkpoint: {e}")
-        return None
+            print(f"Network error retrieving checkpoint: {e}")
+        raise
 
 def consistency(prev_checkpoint, debug=False):
     """
@@ -201,7 +204,6 @@ def consistency(prev_checkpoint, debug=False):
         latest_size = latest_checkpoint['treeSize']
         
         # Get consistency proof using sigstore client
-        rekor_client = RekorClient("https://rekor.sigstore.dev/")
         proof_endpoint = "log/proof"
         params = {
             'firstSize': prev_size,
@@ -212,13 +214,9 @@ def consistency(prev_checkpoint, debug=False):
         if debug:
             print(f"Requesting consistency proof using sigstore client with params: {params}")
         
-        response = rekor_client.session.get(f"{rekor_client.url}{proof_endpoint}", params=params)
-        
-        if response.status_code != 200:
-            if debug:
-                print(f"Failed to get consistency proof: HTTP {response.status_code}")
-                print(f"Response: {response.text}")
-            return False
+        endpoint = urljoin(REKOR_CLIENT.url, proof_endpoint)
+        response = REKOR_CLIENT.session.get(endpoint, params=params)
+        response.raise_for_status()
         
         proof_data = response.json()
         
@@ -241,13 +239,13 @@ def consistency(prev_checkpoint, debug=False):
             
             if debug:
                 print("Consistency verification successful!")
-            print("Consistency verification successful.")
+
             return True
             
         except Exception as e:
             if debug:
                 print(f"Consistency verification failed: {e}")
-            print(f"Consistency verification failed: {e}")
+
             return False
             
     except Exception as e:
