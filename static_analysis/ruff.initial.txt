@@ -1,0 +1,80 @@
+E402 Module level import not at top of file
+  --> main.py:10:1
+   |
+ 8 | warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
+ 9 |
+10 | from sigstore.sign import RekorClient
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+11 | from util import extract_public_key, verify_artifact_signature
+12 | from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
+   |
+
+E402 Module level import not at top of file
+  --> main.py:11:1
+   |
+10 | from sigstore.sign import RekorClient
+11 | from util import extract_public_key, verify_artifact_signature
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12 | from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
+   |
+
+E402 Module level import not at top of file
+  --> main.py:12:1
+   |
+10 | from sigstore.sign import RekorClient
+11 | from util import extract_public_key, verify_artifact_signature
+12 | from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |
+14 | def get_log_entry(log_index, debug=False):
+   |
+
+F541 [*] f-string without any placeholders
+  --> main.py:40:19
+   |
+38 |         rekor_client = RekorClient("https://rekor.sigstore.dev/")
+39 |         if debug:
+40 |             print(f"Created Rekor client for production instance")
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+41 |         # Get log entry by index using the correct method
+42 |         log_entry = rekor_client.log.entries.get(log_index=log_index)  
+   |
+help: Remove extraneous `f` prefix
+
+F841 Local variable `inclusion_result` is assigned to but never used
+   --> main.py:293:9
+    |
+291 |         print(json.dumps(checkpoint, indent=4))
+292 |     if args.inclusion:
+293 |         inclusion_result = inclusion(args.inclusion, args.artifact, debug)
+    |         ^^^^^^^^^^^^^^^^
+294 |     if args.consistency:
+295 |         if not args.tree_id:
+    |
+help: Remove assignment to unused variable `inclusion_result`
+
+E741 Ambiguous variable name: `l`
+  --> merkle_proof.py:25:29
+   |
+23 |         return h.digest()
+24 |
+25 |     def hash_children(self, l, r):
+   |                             ^
+26 |         h = self.new()
+27 |         b = bytes([RFC6962_NODE_HASH_PREFIX]) + l + r
+   |
+
+F841 [*] Local variable `e` is assigned to but never used
+  --> util.py:58:32
+   |
+56 |         )
+57 |         return True  # Signature verification successful
+58 |     except InvalidSignature as e:
+   |                                ^
+59 |         print("Signature is invalid")
+60 |         return False  # Signature verification failed
+   |
+help: Remove assignment to unused variable `e`
+
+Found 7 errors.
+[*] 2 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).
