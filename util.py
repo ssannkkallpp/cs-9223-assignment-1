@@ -56,7 +56,7 @@ def verify_artifact_signature(signature, public_key, artifact_filename):
         )
         return True  # Signature verification successful
     except InvalidSignature as e:
-        print("Signature is invalid")
+        print("Signature is invalid:", e)
         return False  # Signature verification failed
     except Exception as e:
         print("Exception in verifying artifact signature:", e)
