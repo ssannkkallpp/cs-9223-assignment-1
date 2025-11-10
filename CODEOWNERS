@@ -1,0 +1,6 @@
+# CODEOWNERS file
+# Each line is a file pattern followed by one or more owners.
+# Owners will be requested for review when someone opens a pull request.
+
+# Default owner for everything in the repo
+* @ssannkkallpp
