@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Type checkers and linters
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Project-specific
+checkpoint.json
+artifact.md
+*.bundle
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Credentials and secrets
+*.pem
+*.key
+*.cert
+*.crt
+secrets.*
+credentials.*
+.env
