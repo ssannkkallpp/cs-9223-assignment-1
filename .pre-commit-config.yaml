@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: trufflehog-staged
+        name: TruffleHog scan staged files for secrets
+        entry: bash -c 'git diff --cached --name-only --diff-filter=d | xargs -r trufflehog filesystem --no-verification --fail'
+        language: system
+        stages: [commit]
