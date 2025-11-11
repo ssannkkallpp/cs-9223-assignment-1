@@ -7,6 +7,7 @@ The following versions of this project are currently supported:
 | Version | Supported          |
 | ------- | ------------------ |
 | 1.0.x   | :white_check_mark: |
+| 3.0     | :white_check_mark: |
 | < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
