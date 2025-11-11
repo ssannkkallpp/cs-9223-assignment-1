@@ -110,14 +110,6 @@ python3 main.py --consistency \
 - **cryptography** (≥41.0.0): Cryptographic operations and certificate handling
 - **requests** (≥2.28.0): HTTP client for Rekor API calls
 
-## Development
-
-### Running Linters
-
-```bash
-./run_linters.sh
-```
-
 ### Debug Mode
 
 Enable verbose output and save intermediate results:

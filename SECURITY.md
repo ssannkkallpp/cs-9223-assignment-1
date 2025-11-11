@@ -13,7 +13,7 @@ The following versions of this project are currently supported:
 
 To report a security vulnerability:
 
-- **Contact**: Use GitHub's vulnerability reporting feature or contact @ssannkkallpp via GitHub or reach out to ssannkkallpp@gmail.com via email.
+- **Contact**: Use GitHub's private vulnerability reporting feature or contact @ssannkkallpp via GitHub or reach out to ssannkkallpp@gmail.com via email.
 - **Acceptance**: If the vulnerability is accepted, a fix will be prioritized and released with a security advisory
 - **Decline**: If declined, you will receive an explanation of why the issue is not considered a security vulnerability
 - **Disclosure**: Please allow time for a patch to be developed before public disclosure
