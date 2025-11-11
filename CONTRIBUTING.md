@@ -13,19 +13,20 @@ cd cs-9223-assignment-1
 
 ### 2. Set Up Dependencies
 
-**Using pip:**
+**Using Poetry (recommended for development):**
+```bash
+poetry install
+```
+
+**Using pip (basic installation only):**
 ```bash
 pip3 install -r requirements.txt
 ```
 
-**Using Poetry (recommended for development):**
-```bash
-poetry install --with dev
-```
+### 3. Run Tests
 
-Run tests:
 ```bash
-pytest
+poetry run pytest tests/
 ```
 
 ## Opening Issues
