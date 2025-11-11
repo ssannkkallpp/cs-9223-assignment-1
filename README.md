@@ -25,7 +25,7 @@ Rekor is an immutable, append-only transparency log designed to store metadata a
 
 ### Prerequisites
 
-- Python 3.x
+- Python 3.9
 - pip3
 
 ### Setup
