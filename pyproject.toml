@@ -9,7 +9,7 @@ license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9,<3.13"
 dependencies = [
-    "sigstore>=3.6.5",
+    "sigstore==3.6.5",
     "cryptography>=41.0.0",
     "requests>=2.28.0"
 ]
@@ -26,6 +26,9 @@ dev = [
 
 [tool.poetry]
 package-mode = false
+
+[tool.pytest.ini_options]
+pythonpath = "."
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
