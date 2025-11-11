@@ -1,6 +1,7 @@
 """
 Test suite for util.py
 Tests certificate and signature verification utilities
+Tests generated with the help of Warp Terminal AI upon my instructions.
 """
 
 import pytest

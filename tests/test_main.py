@@ -1,6 +1,7 @@
 """
 Test suite for main.py
 Tests main Rekor verifier functions
+Tests generated with the help of Warp Terminal AI upon my instructions.
 """
 
 import pytest

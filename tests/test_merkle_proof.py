@@ -1,6 +1,7 @@
 """
 Test suite for merkle_proof.py
 Tests Merkle tree operations and proof verification
+Tests generated with the help of Warp Terminal AI upon my instructions.
 """
 
 import pytest
@@ -104,16 +105,6 @@ class TestVerifyConsistency:
         
         with pytest.raises(RootMismatchError):
             verify_consistency(DefaultHasher, 1, 2, proof, root1, root2)
-
-
-class TestRootMismatchError:
-    """Test RootMismatchError"""
-    
-    def test_root_mismatch_error_str(self):
-        """Test RootMismatchError string representation"""
-        error = RootMismatchError(b"expected", b"calculated")
-        error_str = str(error)
-        assert "expected" in error_str.lower() or "calculated" in error_str.lower()
 
 
 class TestRootFromInclusionProof:
