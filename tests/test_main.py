@@ -54,8 +54,9 @@ class TestInclusion:
     
     def test_inclusion_artifact_is_directory(self):
         """Test 6: Directory instead of file raises ValueError"""
+        test_dir = os.path.dirname(os.path.abspath(__file__))
         with pytest.raises(ValueError, match="must be a file, not a directory"):
-            inclusion(123, "/Users/sankalpramesh/cs-9223-assignment-1/tests", debug=False)
+            inclusion(123, test_dir, debug=False)
     
     def test_inclusion_empty_artifact_path(self):
         """Test 7: Empty artifact path raises ValueError"""
