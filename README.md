@@ -100,8 +100,8 @@ python3 main.py --consistency \
 ├── util.py              # Cryptographic utilities (key extraction, signature verification)
 ├── requirements.txt     # Python dependencies
 ├── artifact.md          # Sample artifact file
-├── run_linters.sh       # Code quality checks
-└── README.md           # This file
+├── tests                # Unit tests folder         
+└── README.md            
 ```
 
 ## Dependencies
