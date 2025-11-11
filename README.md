@@ -145,3 +145,4 @@ This project was developed for CS-GY 9223 Assignment 1.
 
 ## License
 
+MIT
