@@ -7,7 +7,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<4.0"
 dependencies = [
     "sigstore==3.6.5",
     "cryptography>=41.0.0",
