@@ -18,8 +18,8 @@ from urllib.parse import urljoin
 import requests
 
 from sigstore.sign import RekorClient
-from util import extract_public_key, verify_artifact_signature
-from merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
+from .util import extract_public_key, verify_artifact_signature
+from .merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
 
 # Suppress urllib3 SSL warning for LibreSSL compatibility since I am running on mac
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")

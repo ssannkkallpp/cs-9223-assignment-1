@@ -7,7 +7,7 @@ Tests generated with the help of Warp Terminal AI upon my instructions.
 import pytest
 import tempfile
 import os
-from util import extract_public_key, verify_artifact_signature
+from rekor_log_verifier.util import extract_public_key, verify_artifact_signature
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography import x509
