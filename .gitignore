@@ -1,3 +1,11 @@
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# Scripts
+run_linters.sh
+
 # Python
 __pycache__/
 *.py[cod]

@@ -6,7 +6,7 @@ Tests generated with the help of Warp Terminal AI upon my instructions.
 
 import pytest
 import base64
-from merkle_proof import (
+from rekor_log_verifier.merkle_proof import (
     DefaultHasher, compute_leaf_hash, Hasher, RootMismatchError,
     verify_consistency, verify_inclusion, chain_inner, chain_inner_right,
     chain_border_right, root_from_inclusion_proof

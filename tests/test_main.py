@@ -13,7 +13,7 @@ import requests
 import base64
 
 # Import functions to test
-from main import get_log_entry, inclusion, get_latest_checkpoint, consistency, main
+from rekor_log_verifier.main import get_log_entry, inclusion, get_latest_checkpoint, consistency, main
 
 
 class TestGetLogEntry:
@@ -34,7 +34,7 @@ class TestGetLogEntry:
         mock_entry = Mock()
         mock_entry.body = base64.b64encode(b"test").decode()
         
-        with patch('main.REKOR_CLIENT.log.entries.get', return_value=mock_entry):
+        with patch('rekor_log_verifier.main.REKOR_CLIENT.log.entries.get', return_value=mock_entry):
             result = get_log_entry(12345, debug=True)
             assert result is not None
 
@@ -74,7 +74,7 @@ class TestInclusion:
             body_data = {"spec": {"signature": {}}}
             mock_entry.body = base64.b64encode(json.dumps(body_data).encode()).decode()
             
-            with patch('main.get_log_entry', return_value=mock_entry):
+            with patch('rekor_log_verifier.main.get_log_entry', return_value=mock_entry):
                 result = inclusion(12345, temp_file, debug=True)
                 assert result is False
         finally:
@@ -99,9 +99,9 @@ class TestInclusion:
             mock_entry.body = base64.b64encode(json.dumps(body_data).encode()).decode()
             mock_entry.inclusion_proof = None
             
-            with patch('main.get_log_entry', return_value=mock_entry):
-                with patch('main.extract_public_key', return_value=b"mock_public_key"):
-                    with patch('main.verify_artifact_signature', return_value=True):
+            with patch('rekor_log_verifier.main.get_log_entry', return_value=mock_entry):
+                with patch('rekor_log_verifier.main.extract_public_key', return_value=b"mock_public_key"):
+                    with patch('rekor_log_verifier.main.verify_artifact_signature', return_value=True):
                         result = inclusion(12345, temp_file, debug=True)
                         assert result is False
         finally:
@@ -123,7 +123,7 @@ class TestGetLatestCheckpoint:
         mock_response = Mock()
         mock_response.json.return_value = mock_checkpoint
         
-        with patch('main.REKOR_CLIENT.session.get', return_value=mock_response):
+        with patch('rekor_log_verifier.main.REKOR_CLIENT.session.get', return_value=mock_response):
             result = get_latest_checkpoint(debug=False)
             assert result is not None
             assert 'treeID' in result
@@ -156,7 +156,7 @@ class TestConsistency:
             "treeSize": 100,
             "rootHash": "abc"
         }
-        with patch('main.get_latest_checkpoint', return_value=None):
+        with patch('rekor_log_verifier.main.get_latest_checkpoint', return_value=None):
             result = consistency(valid_checkpoint, debug=True)
             assert result is False
     
@@ -175,9 +175,9 @@ class TestConsistency:
         mock_response = Mock()
         mock_response.json.return_value = {"hashes": []}
         
-        with patch('main.get_latest_checkpoint', return_value=latest_checkpoint):
-            with patch('main.REKOR_CLIENT.session.get', return_value=mock_response):
-                with patch('main.verify_consistency'):
+        with patch('rekor_log_verifier.main.get_latest_checkpoint', return_value=latest_checkpoint):
+            with patch('rekor_log_verifier.main.REKOR_CLIENT.session.get', return_value=mock_response):
+                with patch('rekor_log_verifier.main.verify_consistency'):
                     result = consistency(prev_checkpoint, debug=True)
                     assert result is True
 
@@ -191,7 +191,7 @@ class TestMainCLI:
         mock_checkpoint = {"treeID": "123", "treeSize": 100, "rootHash": "abc"}
         
         with patch('sys.argv', test_args):
-            with patch('main.get_latest_checkpoint', return_value=mock_checkpoint):
+            with patch('rekor_log_verifier.main.get_latest_checkpoint', return_value=mock_checkpoint):
                 main()
     
     def test_main_debug_checkpoint(self):
@@ -200,7 +200,7 @@ class TestMainCLI:
         mock_checkpoint = {"treeID": "123", "treeSize": 100, "rootHash": "abc"}
         
         with patch('sys.argv', test_args):
-            with patch('main.get_latest_checkpoint', return_value=mock_checkpoint):
+            with patch('rekor_log_verifier.main.get_latest_checkpoint', return_value=mock_checkpoint):
                 main()
     
     def test_main_inclusion(self):
@@ -212,7 +212,7 @@ class TestMainCLI:
             test_args = ['prog', '--inclusion', '123', '--artifact', temp_file]
             
             with patch('sys.argv', test_args):
-                with patch('main.inclusion', return_value=True):
+                with patch('rekor_log_verifier.main.inclusion', return_value=True):
                     main()
         finally:
             os.unlink(temp_file)
@@ -243,5 +243,5 @@ class TestMainCLI:
         test_args = ['prog', '--consistency', '--tree-id', '123', '--tree-size', '100', '--root-hash', 'abc']
         
         with patch('sys.argv', test_args):
-            with patch('main.consistency', return_value=True):
+            with patch('rekor_log_verifier.main.consistency', return_value=True):
                 main()

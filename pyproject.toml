@@ -1,5 +1,5 @@
 [project]
-name = "cs-9223-assignment-1"
+name = "rekor_log_verifier"
 version = "0.1.0"
 description = "A Python tool for verifying entries in the Sigstore Rekor transparency log"
 authors = [
@@ -24,8 +24,8 @@ dev = [
     "pytest-cov>=4.1.0"
 ]
 
-[tool.poetry]
-package-mode = false
+[tool.poetry.scripts]
+rekor-verifier = "rekor_log_verifier.main:main"
 
 [tool.pytest.ini_options]
 pythonpath = "."
