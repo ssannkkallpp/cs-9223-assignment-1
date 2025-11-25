@@ -38,7 +38,6 @@ logs/
 
 # Build artifacts
 build/
-dist/
 *.egg-info/
 
 # Credentials and secrets
