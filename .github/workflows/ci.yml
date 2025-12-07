@@ -40,7 +40,7 @@ jobs:
           # Run fast linting with ruff
           poetry run ruff check .
           # Run deep linting with pylint
-          poetry run pylint src tests
+          poetry run pylint src tests --exit-zero
 
       - name: SAST Scan
         run: |

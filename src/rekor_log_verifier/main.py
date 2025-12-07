@@ -19,7 +19,12 @@ import requests
 
 from sigstore.sign import RekorClient
 from .util import extract_public_key, verify_artifact_signature
-from .merkle_proof import DefaultHasher, verify_consistency, verify_inclusion, compute_leaf_hash
+from .merkle_proof import (
+    DefaultHasher,
+    verify_consistency,
+    verify_inclusion,
+    compute_leaf_hash,
+)
 
 # Suppress urllib3 SSL warning for LibreSSL compatibility since I am running on mac
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
@@ -27,6 +32,7 @@ warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.
 # Global Rekor base URL and single client instance
 BASE_URL = "https://rekor.sigstore.dev/"
 REKOR_CLIENT = RekorClient(BASE_URL)
+
 
 def get_log_entry(log_index, debug=False):
     """
@@ -58,15 +64,16 @@ def get_log_entry(log_index, debug=False):
             print(f"Error occured while fetching log entry {log_index}: {e}")
         return None
 
+
 def inclusion(log_index, artifact_filepath, debug=False):
     """
     Verify inclusion of an entry in the Rekor transparency log.
-    
+
     Args:
         log_index (int): The index of the log entry
         artifact_filepath (str): Path to the artifact file
         debug (bool): Enable debug output
-    
+
     Returns:
         bool: True if inclusion is verified, False otherwise
     """
@@ -79,19 +86,25 @@ def inclusion(log_index, artifact_filepath, debug=False):
     if not os.path.exists(artifact_filepath):
         raise ValueError(f"artifact file does not exist: {artifact_filepath}")
     if not os.path.isfile(artifact_filepath):
-        raise ValueError(f"artifact_filepath must be a file, not a directory: {artifact_filepath}")
+        raise ValueError(
+            f"artifact_filepath must be a file, not a directory: {artifact_filepath}"
+        )
     if debug:
-        print(f"Validated inputs - log_index: {log_index}, artifact_filepath: {artifact_filepath}")
+        print(
+            f"Validated inputs - log_index: {log_index}, artifact_filepath: {artifact_filepath}"
+        )
 
     log_entry = get_log_entry(log_index, debug)
     leaf_hash = compute_leaf_hash(log_entry.body)
     body_json = json.loads(base64.b64decode(log_entry.body))
     # Extract signature and certificate content
     signature_content = body_json.get("spec", {}).get("signature", {}).get("content")
-    certificate_content = (body_json.get("spec", {})
-                          .get("signature", {})
-                          .get("publicKey", {})
-                          .get("content"))
+    certificate_content = (
+        body_json.get("spec", {})
+        .get("signature", {})
+        .get("publicKey", {})
+        .get("content")
+    )
     if signature_content is None or certificate_content is None:
         if debug:
             print("Signature verification failed")
@@ -100,7 +113,8 @@ def inclusion(log_index, artifact_filepath, debug=False):
     if not verify_artifact_signature(
         base64.b64decode(signature_content),
         extract_public_key(base64.b64decode(certificate_content)),
-        artifact_filepath):
+        artifact_filepath,
+    ):
         if debug:
             print("Signature verification failed")
         return False
@@ -122,6 +136,8 @@ def inclusion(log_index, artifact_filepath, debug=False):
     print("Signature is valid.")
     print("Offline root hash calculation for inclusion is verified.")
     return True
+
+
 def get_latest_checkpoint(debug=False):
     """
     Get the latest checkpoint from the Rekor transparency log.
@@ -155,13 +171,14 @@ def get_latest_checkpoint(debug=False):
             print(f"Network error retrieving checkpoint: {e}")
         raise
 
+
 def consistency(prev_checkpoint, debug=False):
     """
     Verify consistency between a previous checkpoint and the latest checkpoint.
     Generated with cursor AI upon my instruction to do input validation
     Then check prev_checkpoint (input) details against latest checkpoint
     which is fetched with helper method
-    
+
     Args:
         prev_checkpoint (dict): Previous checkpoint with treeID, treeSize, rootHash
         debug (bool): Enable debug output
@@ -169,13 +186,16 @@ def consistency(prev_checkpoint, debug=False):
         bool: True if consistency is verified, False otherwise
     """
     # Verify that prev checkpoint is not empty
-    if (not prev_checkpoint or
-        not all(key in prev_checkpoint for key in ["treeID", "treeSize", "rootHash"])):
+    if not prev_checkpoint or not all(
+        key in prev_checkpoint for key in ["treeID", "treeSize", "rootHash"]
+    ):
         if debug:
             print("Invalid previous checkpoint: missing required fields")
         return False
     if debug:
-        print(f"Verifying consistency from tree size {prev_checkpoint['treeSize']} to latest...")
+        print(
+            f"Verifying consistency from tree size {prev_checkpoint['treeSize']} to latest..."
+        )
     try:
         # Get latest checkpoint
         latest_checkpoint = get_latest_checkpoint(debug)
@@ -184,25 +204,29 @@ def consistency(prev_checkpoint, debug=False):
                 print("Failed to retrieve latest checkpoint")
             return False
         # Check if tree has grown
-        prev_size = prev_checkpoint['treeSize']
-        latest_size = latest_checkpoint['treeSize']
+        prev_size = prev_checkpoint["treeSize"]
+        latest_size = latest_checkpoint["treeSize"]
         # Get consistency proof using sigstore client
         proof_endpoint = "log/proof"
         params = {
-            'firstSize': prev_size,
-            'lastSize': latest_size,
-            'treeID': prev_checkpoint['treeID']
+            "firstSize": prev_size,
+            "lastSize": latest_size,
+            "treeID": prev_checkpoint["treeID"],
         }
         if debug:
-            print(f"Requesting consistency proof using sigstore client with params: {params}")
+            print(
+                f"Requesting consistency proof using sigstore client with params: {params}"
+            )
         endpoint = urljoin(REKOR_CLIENT.url, proof_endpoint)
         response = REKOR_CLIENT.session.get(endpoint, params=params)
         response.raise_for_status()
         proof_data = response.json()
         if debug:
-            print(f"Received consistency proof with {len(proof_data.get('hashes', []))} hashes")
+            print(
+                f"Received consistency proof with {len(proof_data.get('hashes', []))} hashes"
+            )
         # Verify consistency using merkle_proof module
-        consistency_hashes = proof_data.get('hashes', [])
+        consistency_hashes = proof_data.get("hashes", [])
         # Use verify_consistency from merkle_proof.py
         try:
             verify_consistency(
@@ -210,8 +234,8 @@ def consistency(prev_checkpoint, debug=False):
                 prev_size,
                 latest_size,
                 consistency_hashes,
-                prev_checkpoint['rootHash'],
-                latest_checkpoint['rootHash']
+                prev_checkpoint["rootHash"],
+                latest_checkpoint["rootHash"],
             )
             if debug:
                 print("Consistency verification successful!")
@@ -227,34 +251,54 @@ def consistency(prev_checkpoint, debug=False):
             print(f"Error during consistency verification: {e}")
         return False
 
+
 def main():
     """
     Main function to parse command line arguments and execute requisite operations.
     """
     debug = False
     parser = argparse.ArgumentParser(description="Rekor Verifier")
-    parser.add_argument('-d', '--debug', help='Debug mode',
-                        required=False, action='store_true') # Default false
-    parser.add_argument('-c', '--checkpoint', help='Obtain latest checkpoint\
-                        from Rekor Server public instance',
-                        required=False, action='store_true')
-    parser.add_argument('--inclusion', help='Verify inclusion of an\
+    parser.add_argument(
+        "-d", "--debug", help="Debug mode", required=False, action="store_true"
+    )  # Default false
+    parser.add_argument(
+        "-c",
+        "--checkpoint",
+        help="Obtain latest checkpoint\
+                        from Rekor Server public instance",
+        required=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--inclusion",
+        help="Verify inclusion of an\
                         entry in the Rekor Transparency Log using log index\
                         and artifact filename.\
-                        Usage: --inclusion 126574567',
-                        required=False, type=int)
-    parser.add_argument('--artifact', help='Artifact filepath for verifying\
-                        signature',
-                        required=False)
-    parser.add_argument('--consistency', help='Verify consistency of a given\
-                        checkpoint with the latest checkpoint.',
-                        action='store_true')
-    parser.add_argument('--tree-id', help='Tree ID for consistency proof',
-                        required=False)
-    parser.add_argument('--tree-size', help='Tree size for consistency proof',
-                        required=False, type=int)
-    parser.add_argument('--root-hash', help='Root hash for consistency proof',
-                        required=False)
+                        Usage: --inclusion 126574567",
+        required=False,
+        type=int,
+    )
+    parser.add_argument(
+        "--artifact",
+        help="Artifact filepath for verifying\
+                        signature",
+        required=False,
+    )
+    parser.add_argument(
+        "--consistency",
+        help="Verify consistency of a given\
+                        checkpoint with the latest checkpoint.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--tree-id", help="Tree ID for consistency proof", required=False
+    )
+    parser.add_argument(
+        "--tree-size", help="Tree size for consistency proof", required=False, type=int
+    )
+    parser.add_argument(
+        "--root-hash", help="Root hash for consistency proof", required=False
+    )
     args = parser.parse_args()
     if args.debug:
         debug = True
@@ -283,6 +327,7 @@ def main():
         prev_checkpoint["rootHash"] = args.root_hash
 
         consistency(prev_checkpoint, debug)
+
 
 if __name__ == "__main__":
     main()
