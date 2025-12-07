@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for trufflehog to scan history
+
+      - name: Secret Scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified --since-commit ${{ github.event.before }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+
+      - name: Code Formatting Checks
+        run: |
+          # Check formatting with ruff
+          poetry run ruff format --check .
+
+      - name: Lint Checks
+        run: |
+          # Run fast linting with ruff
+          poetry run ruff check .
+          # Run deep linting with pylint
+          poetry run pylint src tests
+
+      - name: SAST Scan
+        run: |
+          # Scan for security issues with bandit
+          poetry run bandit -r src
+
+      - name: Testing and Coverage
+        run: |
+          # Run tests and generate coverage report
+          poetry run pytest --cov=rekor_log_verifier --cov-report=term-missing
