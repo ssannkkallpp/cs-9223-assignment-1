@@ -1,0 +1,49 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+
+      - name: Build Project
+        run: |
+          poetry build
+
+      - name: Generate SBOM
+        run: |
+          poetry run cyclonedx-py poetry --output-format json --outfile cyclonedx-sbom.json
+
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v1
+        with:
+          subject-path: 'dist/*.whl'
+          sbom-path: 'cyclonedx-sbom.json'
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+            cyclonedx-sbom.json
