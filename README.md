@@ -1,5 +1,7 @@
 # Rekor Log Verification
 
+[![CI](https://github.com/ssannkkallpp/cs-9223-assignment-1/actions/workflows/ci.yml/badge.svg)](https://github.com/ssannkkallpp/cs-9223-assignment-1/actions/workflows/ci.yml)
+
 A Python tool for verifying entries in the [Sigstore Rekor](https://github.com/sigstore/rekor) transparency log. This project provides functionality to cryptographically verify artifact signatures, inclusion proofs, and consistency proofs against the Rekor public instance.
 
 ## Overview
